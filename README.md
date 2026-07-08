@@ -27,13 +27,20 @@ At a glance, trilium-mcp forwards the client's ETAPI token straight through to T
   <img src="docs/sequence-overview.png" alt="Client sends a tool call with an ETAPI token; trilium-mcp forwards it to Trilium and returns the result" width="560">
 </p>
 
-In more detail — startup builds the tools from the OpenAPI spec, the middleware rejects any
-request without an `Authorization` header, and the token is carried per request from the
-middleware to the outgoing ETAPI call:
+<details>
+<summary>Detailed sequence (startup, auth gate, token pass-through)</summary>
+
+<p></p>
+
+Startup builds the tools from the OpenAPI spec, the middleware rejects any request without an
+`Authorization` header, and the token is carried per request from the middleware to the outgoing
+ETAPI call:
 
 <p align="center">
   <img src="docs/sequence.png" alt="Detailed sequence: startup, health check, missing-token rejection, and an authenticated tool call" width="720">
 </p>
+
+</details>
 
 ## Setup
 
@@ -48,7 +55,7 @@ middleware to the outgoing ETAPI call:
 
 2. **Configure** the deployment via environment variables (see Configuration below) —
    at minimum `TRILIUM_SERVER_URL` pointing at your Trilium instance.
-3. **Run** both Trilium and the sidecar:
+3. **Run** both Trilium and trilium-mcp:
    ```
    docker compose up -d --build
    ```
@@ -105,13 +112,13 @@ your-host {
 
 All configuration is via environment variables:
 
-| Variable             | Default               | Purpose                                                                |
-| -------------------- | --------------------- | ---------------------------------------------------------------------- |
-| `TRILIUM_SERVER_URL` | `http://trilium:8080` | Base URL of the Trilium instance (`/etapi` is appended automatically). |
-| `MCP_HOST`           | `0.0.0.0`             | Interface the MCP server binds to.                                     |
-| `MCP_PORT`           | `8081`                | Port the MCP server listens on.                                        |
-| `MCP_PATH`           | `/mcp`                | HTTP path the MCP endpoint is served at.                               |
-| `TRILIUM_ETAPI_SPEC` | bundled spec          | Override the OpenAPI spec path.                                        |
+| Variable             | Default               | Purpose                                                                                                  |
+| -------------------- | --------------------- | -------------------------------------------------------------------------------------------------------- |
+| `TRILIUM_SERVER_URL` | `http://trilium:8080` | Base URL of the Trilium instance (`/etapi` is appended automatically).                                   |
+| `MCP_HOST`           | `0.0.0.0`             | Interface the MCP server binds to.                                                                       |
+| `MCP_PORT`           | `8081`                | Port the MCP server listens on.                                                                          |
+| `MCP_PATH`           | `/mcp`                | HTTP path the MCP endpoint is served at.                                                                 |
+| `TRILIUM_ETAPI_SPEC` | bundled spec          | Override the OpenAPI spec path.                                                                          |
 | `MCP_ALLOWED_HOSTS`  | *(unset = any)*       | Comma-separated `Host` allowlist (DNS-rebinding protection). Unset accepts any Host; set it to restrict. |
 
 ## Security
