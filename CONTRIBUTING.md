@@ -5,6 +5,8 @@
   - [Talking to the MCP server](#talking-to-the-mcp-server)
   - [Resetting the fixture](#resetting-the-fixture)
 - [Running the tests](#running-the-tests)
+  - [The easy way: run-tests.sh](#the-easy-way-run-testssh)
+  - [Manually](#manually)
 - [Tools generated from the ETAPI spec](#tools-generated-from-the-etapi-spec)
 
 ## Local development environment
@@ -68,13 +70,42 @@ docker compose up -d
 
 ## Running the tests
 
-Tests live in `app/tests/` and run against a mock ETAPI transport (no running
-Trilium required).
+Tests live in `app/tests/` and come in two kinds:
+
+- **Unit tests** (`app/tests/test_*.py`) run against a mock ETAPI transport — no
+  running Trilium required.
+- **Live integration tests** (`app/tests/live/`) drive the real MCP server over
+  HTTP against the running stack, covering every MCP tool. They **auto-skip** when
+  the MCP `/health` endpoint is unreachable.
+
+### The easy way: `run-tests.sh`
+
+[`run-tests.sh`](run-tests.sh) runs the whole suite against a **clean, disposable
+fixture**. It stops the containers, resets the seeded DB (with the containers
+down so SQLite isn't corrupted), rebuilds and starts them, waits for MCP health,
+runs `pytest`, then stops the containers and resets the DB again — even if a test
+fails. Extra arguments pass through to `pytest`:
+
+```bash
+./run-tests.sh                  # full suite against a fresh fixture
+./run-tests.sh tests/live -q    # just the live tests, quietly
+./run-tests.sh -k export        # a single test by keyword
+```
+
+It leaves the stack **stopped** at the end; run `docker compose up -d` to bring
+it back for interactive work.
+
+### Manually
 
 ```bash
 cd app
 uv run pytest        # or: .venv/bin/python -m pytest
 ```
+
+Without the stack up, the live tests skip and the unit tests still run. With the
+stack up (`docker compose up -d`), the full suite runs — but note the live tests
+mutate the fixture, so `git checkout -- trilium-data/` afterwards (or just use
+`run-tests.sh`, which handles the reset for you).
 
 ## Tools generated from the ETAPI spec
 
