@@ -79,7 +79,7 @@ The MCP endpoint is then available at `http://localhost:8081/mcp`.
 **3. Connect your MCP client** with the token from step 1:
 
 ```bash
-claude mcp add trilium --transport http \
+claude mcp add trilium --scope user --transport http \
   http://localhost:8081/mcp \
   --header "Authorization: YOUR_TRILIUM_ETAPI_TOKEN"
 ```
@@ -94,12 +94,12 @@ wherever trilium-mcp is reachable (a TLS reverse proxy, or the container directl
 
 ```bash
 # Behind a reverse proxy (TLS)
-claude mcp add trilium --transport http \
+claude mcp add trilium --scope user --transport http \
   https://your-host/mcp \
   --header "Authorization: YOUR_TRILIUM_ETAPI_TOKEN"
 
 # Directly over a trusted LAN (plain HTTP), by IP or hostname
-claude mcp add trilium --transport http \
+claude mcp add trilium --scope user --transport http \
   http://192.168.1.50:8081/mcp \
   --header "Authorization: YOUR_TRILIUM_ETAPI_TOKEN"
 ```
@@ -108,16 +108,17 @@ Register **multiple instances** by repeating with a different URL + token; each 
 the same image and is bound to one Trilium via `TRILIUM_SERVER_URL`:
 
 ```bash
-claude mcp add trilium-work --transport http \
+claude mcp add trilium-work --scope user --transport http \
   https://work-host/mcp \
   --header "Authorization: WORK_TOKEN"
 ```
 
-By default `claude mcp add` registers the server in **local** scope — available only to you in the
-current project. To make Trilium available across **all** your projects, add `--scope user`:
+The `--scope user` flag registers the server across **all** your projects, which is usually what
+you want for a personal knowledge base. Drop it to fall back to `claude mcp add`'s default **local**
+scope — available only to you in the current project:
 
 ```bash
-claude mcp add trilium --scope user --transport http \
+claude mcp add trilium --transport http \
   http://localhost:8081/mcp \
   --header "Authorization: YOUR_TRILIUM_ETAPI_TOKEN"
 ```
