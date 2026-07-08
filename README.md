@@ -10,13 +10,30 @@ client connects to it by URL.
 
 ## Architecture
 
-```
-MCP client (Claude Code, …)  ──HTTP /mcp──▶  mcp sidecar  ──ETAPI──▶  trilium
-                                             (this repo)   http://trilium:8080/etapi
-```
+<p align="center">
+  <img src="docs/architecture.png" alt="Deployment: MCP clients → mcp sidecar → Trilium, on the Docker network" width="520">
+</p>
 
 The sidecar talks to Trilium over the internal Docker network, so Trilium's ETAPI is
-never exposed publicly on its own.
+never exposed publicly on its own. Clients reach the sidecar either through a TLS-terminating
+reverse proxy or directly over a trusted LAN — in both cases the ETAPI token they present is
+the only credential.
+
+## How a request flows
+
+At a glance, the sidecar forwards the client's ETAPI token straight through to Trilium:
+
+<p align="center">
+  <img src="docs/sequence-overview.png" alt="Client sends a tool call with an ETAPI token; the sidecar forwards it to Trilium and returns the result" width="560">
+</p>
+
+In more detail — startup builds the tools from the OpenAPI spec, the middleware rejects any
+request without an `Authorization` header, and the token is carried per request from the
+middleware to the outgoing ETAPI call:
+
+<p align="center">
+  <img src="docs/sequence.png" alt="Detailed sequence: startup, health check, missing-token rejection, and an authenticated tool call" width="720">
+</p>
 
 ## Setup
 
@@ -24,6 +41,11 @@ never exposed publicly on its own.
    This token is the only credential — the server itself stores no secret. Each
    client presents its own token per request as `Authorization: Bearer <token>`,
    and the server forwards the raw token straight through to Trilium's ETAPI.
+
+   <p align="center">
+     <img src="docs/create-etapi.png" alt="Trilium Options → ETAPI screen with the Create new ETAPI token button" width="720">
+   </p>
+
 2. **Configure** the deployment via environment variables (see Configuration below) —
    at minimum `TRILIUM_SERVER_URL` pointing at your Trilium instance.
 3. **Run** both Trilium and the sidecar:

@@ -1,0 +1,18 @@
+@startuml sequence-overview
+title Trilium ETAPI MCP — overview
+
+skinparam responseMessageBelowArrow true
+autonumber
+
+actor "MCP client\n(Claude Code, …)" as Client
+participant "mcp sidecar\n(this repo)" as Sidecar
+participant "Trilium\nETAPI" as Trilium
+
+Client -> Sidecar : MCP tool call over HTTP\nAuthorization: <ETAPI token>
+Sidecar -> Trilium : same token forwarded to /etapi
+Trilium --> Sidecar : notes data
+Sidecar --> Client : MCP tool result
+
+note over Sidecar : Turns each ETAPI endpoint into an MCP tool.\nHolds no secret — the client's token is the only credential.
+
+@enduml

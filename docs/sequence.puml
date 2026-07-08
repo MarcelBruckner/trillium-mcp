@@ -1,0 +1,56 @@
+@startuml sequence
+title Trilium ETAPI MCP — request flow (token pass-through)
+
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "MCP client\n(Claude Code, …)" as Client
+
+box "mcp sidecar (this repo)" #F5F7FA
+    participant "TokenCapture\nMiddleware\n(ASGI)" as MW
+    participant "FastMCP\n(OpenAPI-derived tools)" as MCP
+    participant "httpx client\n+ EtapiTokenAuth" as HTTP
+end box
+
+participant "Trilium\nETAPI" as Trilium
+
+== Startup ==
+[-> MCP : build_server()
+activate MCP
+MCP -> MCP : load bundled\ntrilium-etapi.openapi
+MCP -> MCP : FastMCP.from_openapi\n→ ~40 tools
+deactivate MCP
+note over MCP : If the spec fails to load, a\nstartup_error-only server is served instead.
+
+== Health check (unauthenticated) ==
+Client -> MW : GET /health
+MW --> Client : 200 "ok"
+
+== Missing token (rejected before any tool) ==
+Client -> MW : POST /mcp\n(no Authorization header)
+MW --> Client : 401\nWWW-Authenticate: Bearer
+
+== Tool call (authenticated) ==
+Client -> MW : POST /mcp\nAuthorization: <token>\n(tool call, e.g. searchNotes)
+activate MW
+MW -> MW : stash token in\n_incoming_auth (contextvar)
+MW -> MCP : forward ASGI request
+activate MCP
+MCP -> HTTP : invoke mapped ETAPI operation
+activate HTTP
+HTTP -> HTTP : read token from contextvar,\nstrip leading "Bearer " if present
+HTTP -> Trilium : HTTP <op> /etapi/...\nAuthorization: <raw token>
+activate Trilium
+Trilium -> Trilium : validate token\n(server holds no secret)
+Trilium --> HTTP : JSON response
+deactivate Trilium
+HTTP --> MCP : response
+deactivate HTTP
+MCP --> MW : tool result
+deactivate MCP
+MW -> MW : reset contextvar (finally)
+MW --> Client : MCP tool result
+deactivate MW
+
+@enduml
