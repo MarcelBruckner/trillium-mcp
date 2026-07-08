@@ -1,6 +1,7 @@
 import os
 import sys
 import traceback
+from contextvars import ContextVar
 from pathlib import Path
 
 import httpx
@@ -30,6 +31,10 @@ DEFAULT_PORT = 8000
 DEFAULT_PATH = "/mcp"
 HEALTH_PATH = "/health"
 
+# Per-request holder for the incoming client Authorization header. Populated by
+# TokenCaptureMiddleware and read by EtapiTokenAuth when calling Trilium.
+_incoming_auth: ContextVar[str | None] = ContextVar("incoming_auth", default=None)
+
 
 def token_missing_message() -> str:
     """Recovery instructions shown when the ETAPI token is not set."""
@@ -57,19 +62,18 @@ class EtapiTokenAuth(httpx.Auth):
         yield request
 
 
-class BearerAuthMiddleware:
-    """Pure-ASGI middleware that gates the MCP endpoint behind a static bearer
-    token.
+class TokenCaptureMiddleware:
+    """Pure-ASGI middleware that requires a client Authorization header on the
+    MCP endpoint and stashes it for the outgoing ETAPI call.
 
-    Implemented at the ASGI layer (not Starlette's BaseHTTPMiddleware) because
-    the streamable-HTTP transport uses long-lived streaming responses, which
-    BaseHTTPMiddleware buffers and breaks. The health check is always allowed
-    so orchestrators can probe liveness without the token.
+    The token IS the auth: a request without one is rejected with 401 before it
+    reaches FastMCP; validity is enforced by Trilium on the actual ETAPI call.
+    Implemented at the ASGI layer (not BaseHTTPMiddleware) so it does not buffer
+    the streamable-HTTP response. The health check is always allowed.
     """
 
-    def __init__(self, app, token: str) -> None:
+    def __init__(self, app) -> None:
         self.app = app
-        self._expected = f"Bearer {token}"
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -80,8 +84,8 @@ class BearerAuthMiddleware:
             await self.app(scope, receive, send)
             return
         headers = dict(scope.get("headers") or [])
-        provided = headers.get(b"authorization", b"").decode()
-        if provided != self._expected:
+        authorization = headers.get(b"authorization", b"").decode()
+        if not authorization:
             await send({
                 "type": "http.response.start",
                 "status": 401,
@@ -92,10 +96,14 @@ class BearerAuthMiddleware:
             })
             await send({
                 "type": "http.response.body",
-                "body": b'{"error":"unauthorized"}',
+                "body": b'{"error":"missing Authorization header"}',
             })
             return
-        await self.app(scope, receive, send)
+        token = _incoming_auth.set(authorization)
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            _incoming_auth.reset(token)
 
 
 def load_spec(spec_path: Path) -> dict:
