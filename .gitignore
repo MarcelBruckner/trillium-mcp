@@ -1,0 +1,12 @@
+# Python / uv
+**/.venv/
+**/__pycache__/
+*.pyc
+
+# Local config with secrets
+.env
+*.token
+etapi.token
+
+# Trilium data volume
+trilium-data/

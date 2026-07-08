@@ -1,0 +1,16 @@
+[project]
+name = "trilium_etapi_mcp"
+version = "0.1.0"
+description = "Standalone MCP server exposing the Trilium ETAPI over HTTP"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.1",
+    "fastmcp>=3.0.0",
+    "pyyaml>=6.0",
+    "uvicorn>=0.30",
+]
+
+[tool.uv]
+# Single-module app; install only the dependencies (no build backend needed).
+package = false
