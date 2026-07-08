@@ -8,6 +8,18 @@ instance: every documented ETAPI endpoint is turned into an MCP tool at startup 
 `searchNotes`, `exportNoteSubtree`, …), served over streamable **HTTP** so any MCP
 client connects to it by URL.
 
+## Contents
+
+- [Architecture](#architecture)
+- [How a request flows](#how-a-request-flows)
+- [Setup](#setup)
+- [Adding to an existing Trilium](#adding-to-an-existing-trilium)
+- [Connecting a client](#connecting-a-client)
+- [TLS / reverse proxy](#tls--reverse-proxy)
+- [Configuration](#configuration)
+- [Security](#security)
+- [Layout](#layout)
+
 ## Architecture
 
 <p align="center">
@@ -67,6 +79,10 @@ Already running Trilium with Docker Compose? Add this one service to that
 `docker-compose.yaml` — it builds straight from the repo, so there's nothing to clone:
 
 ```yaml
+services:
+  trilium:
+    ...
+    
   trilium-mcp:
     build: https://github.com/MarcelBruckner/trilium-mcp.git
     restart: unless-stopped
