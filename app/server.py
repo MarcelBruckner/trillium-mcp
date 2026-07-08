@@ -13,7 +13,7 @@ from starlette.responses import PlainTextResponse
 
 # The ETAPI OpenAPI spec ships alongside this server (baked into the image).
 # Tools are generated from it at startup.
-DEFAULT_SPEC = Path(__file__).parent / "trillium-etapi.openapi"
+DEFAULT_SPEC = Path(__file__).parent / "trilium-etapi.openapi"
 
 # All configuration comes from the environment so the server runs cleanly as a
 # container sidecar with no command-line arguments.

@@ -128,5 +128,5 @@ app/
   server.py              the MCP server (OpenAPI-driven, HTTP transport, token pass-through)
   pyproject.toml         dependencies
   uv.lock
-  trillium-etapi.openapi bundled Trilium ETAPI OpenAPI spec
+  trilium-etapi.openapi  bundled Trilium ETAPI OpenAPI spec
 ```
