@@ -1,8 +1,8 @@
 ' Shared theme for the trilium-mcp diagrams.
 ' Palette taken from the Trilium flower logo:
-'   green  #4CA53E  (primary accent)   light #E8F5E4
-'   orange #E6832E                     light #FBEEDF
-'   red    #DA3B33                     light #FBE6E4
+'   green  #4CA53E  (primary accent)   fill #98D486
+'   orange #E6832E                     fill #F4C48D
+'   red    #DA3B33                     fill #F2A7A1
 ' Neutrals: slate greys. No shadows, rounded corners.
 ' Included by the .puml files via `!include theme.iuml`.
 
@@ -50,7 +50,7 @@ skinparam sequence {
     GroupBorderColor #CBD5E1
     GroupBackgroundColor #F1F5F9
     GroupHeaderFontColor #0F172A
-    DividerBackgroundColor #E8F5E4
+    DividerBackgroundColor #D7EFCC
     DividerBorderColor #CBD5E1
     DividerFontColor #0F172A
 }

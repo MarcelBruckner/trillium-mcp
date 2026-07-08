@@ -1,25 +1,32 @@
-name: Render diagrams
+name: Validate diagrams
 
-# Render the PlantUML sources under docs/ to PNG and commit the results back,
-# so the images embedded in the README always match their .puml source.
+# Validate that the PlantUML sources under docs/ still render cleanly.
+# PNGs are NOT committed here: the pre-commit hook (.githooks/pre-commit)
+# re-renders any out-of-date diagram locally, so committed PNGs already match
+# their source. CI only guards against a .puml that fails to render.
 
 on:
   push:
     branches: [main]
     paths:
       - "docs/**.puml"
+      - "docs/**.iuml"
       - ".github/workflows/render-diagrams.yml"
+  pull_request:
+    paths:
+      - "docs/**.puml"
+      - "docs/**.iuml"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: render-diagrams-${{ github.ref }}
+  group: validate-diagrams-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  render:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,11 +36,5 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends plantuml graphviz
 
-      - name: Render diagrams
-        run: plantuml -tpng docs/*.puml
-
-      - name: Commit rendered PNGs
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "docs: re-render PlantUML diagrams [skip ci]"
-          file_pattern: "docs/*.png"
+      - name: Render diagrams (verify they compile)
+        run: plantuml -tpng -o /tmp/diagram-check docs/*.puml

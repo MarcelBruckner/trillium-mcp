@@ -16,7 +16,7 @@ together {
 rectangle "reverse proxy\n(optional — TLS)" as Proxy #line:94A3B8;back:F8FAFC;text:64748B
 
 rectangle "Docker host / compose network" as Host #F8FAFC {
-    rectangle "trilium-mcp\n(this repo)\n:8081 /mcp" as MCP #line:4CA53E;back:E8F5E4
+    rectangle "trilium-mcp\n(this repo)\n:8081 /mcp" as MCP #line:4CA53E;back:98D486
     rectangle "trilium\n:8080 /etapi" as Trilium
     database "trilium-data\n(volume)" as Data
 }

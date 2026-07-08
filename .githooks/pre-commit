@@ -1,0 +1,32 @@
+#!/bin/sh
+# Render any out-of-date PlantUML diagrams under docs/ and stage the PNGs, so a
+# commit that touches a .puml (or the shared theme) always carries a matching PNG.
+#
+# A diagram is re-rendered only when it is not up to date: its .png is missing,
+# or older than its .puml, or older than the shared theme.iuml. Up-to-date
+# diagrams are left untouched.
+#
+# Enable once per clone:  git config core.hooksPath .githooks
+
+if ! command -v plantuml >/dev/null 2>&1; then
+    echo "pre-commit: plantuml not found; skipping diagram render (install it to keep PNGs in sync)" >&2
+    exit 0
+fi
+
+theme="docs/theme.iuml"
+
+for puml in docs/*.puml; do
+    [ -e "$puml" ] || continue
+    png="${puml%.puml}.png"
+
+    if [ ! -f "$png" ] || [ "$puml" -nt "$png" ] || { [ -f "$theme" ] && [ "$theme" -nt "$png" ]; }; then
+        echo "pre-commit: rendering $puml -> $png" >&2
+        plantuml -tpng "$puml" || {
+            echo "pre-commit: failed to render $puml" >&2
+            exit 1
+        }
+        git add "$png"
+    fi
+done
+
+exit 0

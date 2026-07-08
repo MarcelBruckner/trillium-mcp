@@ -6,7 +6,7 @@ skinparam responseMessageBelowArrow true
 autonumber
 
 actor "MCP client\n(Claude Code, …)" as Client
-participant "trilium-mcp\n(this repo)" as Sidecar #E8F5E4
+participant "trilium-mcp\n(this repo)" as Sidecar #98D486
 participant "Trilium\nETAPI" as Trilium
 
 Client -> Sidecar : MCP tool call over HTTP\nAuthorization: <ETAPI token>
