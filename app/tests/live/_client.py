@@ -64,3 +64,20 @@ async def make_note(c, *, title="itest", content="body", parent="root", type="te
 
 async def make_note_pair(c) -> tuple[str, str]:
     return await make_note(c, title="itest-A"), await make_note(c, title="itest-B")
+
+
+async def path_arg_name(c, tool: str, name: str) -> str:
+    """The tool's path-param arg for `name`. FastMCP renames a path param to
+    `<name>__path` when the request body schema also declares that field
+    (e.g. patchNoteById); fall back to `name` when there's no collision."""
+    tools = {t.name: t for t in await c.list_tools()}
+    props = (tools[tool].inputSchema or {}).get("properties", {})
+    return f"{name}__path" if f"{name}__path" in props else name
+
+
+async def body_arg_name(c, tool: str, path_key: str) -> str:
+    """The tool's sole non-path property — used for raw text/plain body tools
+    whose body arg name FastMCP derives from the (unnamed) spec schema."""
+    tools = {t.name: t for t in await c.list_tools()}
+    props = (tools[tool].inputSchema or {}).get("properties", {})
+    return next(k for k in props if k != path_key)

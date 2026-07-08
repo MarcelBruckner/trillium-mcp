@@ -3,7 +3,7 @@ import json
 import pytest
 from fastmcp.exceptions import ToolError
 
-from tests.live._client import client, make_note, run_async
+from tests.live._client import body_arg_name, client, make_note, path_arg_name, run_async
 
 
 def test_create_and_get_note():
@@ -17,26 +17,11 @@ def test_create_and_get_note():
     assert note["title"] == "itest-create"
 
 
-async def _path_arg_name(c, tool: str, name: str) -> str:
-    """The tool's argument for a given path parameter.
-
-    Runtime discovery, same rationale as `_body_arg_name` below: `patchNoteById`'s
-    request body is the full `Note` schema, which itself has a `noteId` field, so
-    FastMCP renames the *path* parameter to `noteId__path` to avoid colliding with
-    the body's `noteId` property. Passing plain `noteId` only sets the body field
-    and leaves the URL template unsubstituted (a literal 404 on `'{noteId}'`).
-    """
-    tools = {t.name: t for t in await c.list_tools()}
-    props = (tools[tool].inputSchema or {}).get("properties", {})
-    suffixed = f"{name}__path"
-    return suffixed if suffixed in props else name
-
-
 def test_patch_note_title():
     async def run():
         async with client() as c:
             note_id = await make_note(c, title="itest-before")
-            arg = await _path_arg_name(c, "patchNoteById", "noteId")
+            arg = await path_arg_name(c, "patchNoteById", "noteId")
             await c.call_tool("patchNoteById", {arg: note_id, "title": "itest-after"})
             got = await c.call_tool("getNoteById", {"noteId": note_id})
             return got.data
@@ -67,18 +52,11 @@ def test_undelete_note_restores_it():
     assert note["noteId"] == note_id
 
 
-async def _body_arg_name(c, tool: str) -> str:
-    """The single non-path property of a raw-body tool's input schema."""
-    tools = {t.name: t for t in await c.list_tools()}
-    props = (tools[tool].inputSchema or {}).get("properties", {})
-    return next(k for k in props if k != "noteId")
-
-
 def test_put_then_get_note_content():
     async def run():
         async with client() as c:
             note_id = await make_note(c, title="itest-content", content="orig")
-            arg = await _body_arg_name(c, "putNoteContentById")
+            arg = await body_arg_name(c, "putNoteContentById", "noteId")
             await c.call_tool("putNoteContentById", {"noteId": note_id, arg: "updated body"})
             got = await c.call_tool("getNoteContent", {"noteId": note_id})
             return got.content[0].text

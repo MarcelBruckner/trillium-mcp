@@ -1,28 +1,12 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from tests.live._client import client, make_note_pair, run_async
+from tests.live._client import client, make_note_pair, path_arg_name, run_async
 
 
 def _branch_id(data):
     # postBranch returns a Branch object.
     return data["branchId"] if isinstance(data, dict) else None
-
-
-async def _path_arg_name(c, tool: str, name: str) -> str:
-    """The tool's argument for a given path parameter.
-
-    Same rationale as `test_notes.py`'s `_path_arg_name`: `patchBranchById`'s
-    request body is the full `Branch` schema, which itself has a `branchId`
-    field, so FastMCP renames the *path* parameter to `branchId__path` to
-    avoid colliding with the body's `branchId` property. Passing plain
-    `branchId` only sets the body field and leaves the URL template
-    unsubstituted (a literal 404 on `'{branchId}'`).
-    """
-    tools = {t.name: t for t in await c.list_tools()}
-    props = (tools[tool].inputSchema or {}).get("properties", {})
-    suffixed = f"{name}__path"
-    return suffixed if suffixed in props else name
 
 
 def test_create_and_get_branch():
@@ -49,7 +33,7 @@ def test_patch_branch_prefix():
                 "postBranch", {"noteId": note_a, "parentNoteId": note_b}
             )
             branch_id = _branch_id(created.data)
-            arg = await _path_arg_name(c, "patchBranchById", "branchId")
+            arg = await path_arg_name(c, "patchBranchById", "branchId")
             await c.call_tool("patchBranchById", {arg: branch_id, "prefix": "itest-pfx"})
             got = await c.call_tool("getBranchById", {"branchId": branch_id})
             return got.data

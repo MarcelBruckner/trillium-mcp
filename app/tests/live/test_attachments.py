@@ -1,7 +1,7 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from tests.live._client import client, make_note, run_async
+from tests.live._client import body_arg_name, client, make_note, path_arg_name, run_async
 
 
 async def _make_attachment(c, owner_id, title="itest-att"):
@@ -16,26 +16,6 @@ async def _make_attachment(c, owner_id, title="itest-att"):
         },
     )
     return r.data["attachmentId"], r.data
-
-
-async def _body_arg_name(c, tool: str) -> str:
-    tools = {t.name: t for t in await c.list_tools()}
-    props = (tools[tool].inputSchema or {}).get("properties", {})
-    return next(k for k in props if k != "attachmentId")
-
-
-async def _path_arg_name(c, tool: str, name: str) -> str:
-    """The tool's argument for a given path parameter.
-
-    `patchAttachmentById`'s request body is the full `Attachment` schema, which
-    itself has an `attachmentId` field, so FastMCP renames the *path* parameter
-    to `attachmentId__path` to avoid colliding with the body's `attachmentId`
-    property (same pattern as `patchNoteById` -> `noteId__path`).
-    """
-    tools = {t.name: t for t in await c.list_tools()}
-    props = (tools[tool].inputSchema or {}).get("properties", {})
-    suffixed = f"{name}__path"
-    return suffixed if suffixed in props else name
 
 
 def test_create_and_get_attachment():
@@ -56,7 +36,7 @@ def test_patch_attachment_title():
         async with client() as c:
             owner = await make_note(c, title="itest-att-owner2")
             att_id, _ = await _make_attachment(c, owner)
-            arg = await _path_arg_name(c, "patchAttachmentById", "attachmentId")
+            arg = await path_arg_name(c, "patchAttachmentById", "attachmentId")
             await c.call_tool("patchAttachmentById", {arg: att_id, "title": "itest-att-after"})
             got = await c.call_tool("getAttachmentById", {"attachmentId": att_id})
             return got.data
@@ -68,7 +48,7 @@ def test_put_then_get_attachment_content():
         async with client() as c:
             owner = await make_note(c, title="itest-att-owner3")
             att_id, _ = await _make_attachment(c, owner)
-            arg = await _body_arg_name(c, "putAttachmentContentById")
+            arg = await body_arg_name(c, "putAttachmentContentById", "attachmentId")
             await c.call_tool("putAttachmentContentById", {"attachmentId": att_id, arg: "att-updated"})
             got = await c.call_tool("getAttachmentContent", {"attachmentId": att_id})
             return got.content[0].text
