@@ -10,3 +10,6 @@ etapi.token
 
 # Trilium data volume
 trilium-data/
+
+# Superpowers design docs (brainstorming specs / implementation plans) — local only
+docs/superpowers/
