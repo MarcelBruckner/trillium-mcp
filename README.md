@@ -23,7 +23,6 @@ served over streamable **HTTP** so any MCP client connects to it by URL.
 - [Security](#security)
 - [How it works](#how-it-works)
 - [Alternatives](#alternatives)
-- [Layout](#layout)
 - [Contributing](#contributing)
 
 ## Architecture
@@ -224,18 +223,6 @@ is the most active and popular (≈63 stars, last commit March 2026), though it 
 prototype. [paerrin/trilium-mcp-server](https://codeberg.org/paerrin/trilium-mcp-server) saw a
 short burst of releases (Dec 2025 → v0.1.7 in Jan 2026) and has been quiet since. [radonx/mcp-trilium](https://github.com/radonx/mcp-trilium)
 has had no commits since August 2025 (~3 commits total, 1 star) and **appears abandoned**.
-
-## Layout
-
-```
-Dockerfile               builds the MCP server image (uv-based)
-.mcp.json                example MCP client config
-app/
-  server.py              the MCP server (OpenAPI-driven, HTTP transport, token pass-through)
-  pyproject.toml         dependencies
-  uv.lock
-  trilium-etapi.openapi  bundled Trilium ETAPI OpenAPI spec
-```
 
 ## Contributing
 
